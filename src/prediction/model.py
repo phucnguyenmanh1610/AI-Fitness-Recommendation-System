@@ -18,9 +18,17 @@ def train_prediction_model(df: pd.DataFrame, target_col: str = 'cal_burned') -> 
     :return: Trained model
     """
     X = df.drop(target_col, axis=1, errors='ignore')
-    y = df[target_col] if target_col in df else None  # Placeholder if no target
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    y = df[target_col] if target_col in df else pd.Series([0] * len(df))  # Placeholder if no target
 
+    if len(df) <= 1:  # Handle small data: No split, fit all
+        model = LinearRegression()
+        model.fit(X, y)
+        logger.info("Trained on small data (no split)")
+        joblib.dump(model, 'models/prediction_model.pkl')
+        return model
+
+    # Normal case
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     model = LinearRegression()  # Or RandomForestRegressor(n_estimators=100)
     model.fit(X_train, y_train)
 

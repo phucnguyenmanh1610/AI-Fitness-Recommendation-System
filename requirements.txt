@@ -4,5 +4,4 @@ scikit-learn  # For ML models
 tensorflow  # For advanced models if needed
 streamlit  # For dashboard prototype
 matplotlib  # For charts
-logging  # Built-in, no version
 pytest  # For testing
