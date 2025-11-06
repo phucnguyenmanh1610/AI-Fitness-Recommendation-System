@@ -1,39 +1,44 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-import logging
-from .input import calculate_bmr  # Import from same package
-
-logger = logging.getLogger(__name__)
-
-
-def calculate_bmi(weight: float, height: float) -> float:
-    return weight / ((height / 100) ** 2)
-
+from sklearn.preprocessing import LabelEncoder
 
 def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Preprocess data.
-    """
-    # Handle missing
-    df.fillna(df.mean(numeric_only=True), inplace=True)
+    df = df.copy()
 
-    # Add placeholders if missing columns
-    if 'age' not in df.columns:
-        df['age'] = np.random.randint(18, 65, len(df))
-    # Tương tự cho other columns if needed
+    # --- Bước 1: Chuẩn hóa tên cột ---
+    df.columns = [c.strip().lower().replace(' ', '_') for c in df.columns]
 
-    # Calculate features
-    df['BMI'] = df.apply(lambda row: calculate_bmi(row['weight'], row['height']), axis=1)
-    df['BMR'] = df.apply(lambda row: calculate_bmr(row['age'], row['gender'], row['weight'], row['height']), axis=1)
+    # --- Bước 2: Đảm bảo có các cột bắt buộc ---
+    required_cols = [
+        'age', 'gender', 'weight', 'height', 'max_bpm', 'avg_bpm', 'resting_bpm',
+        'session_duration', 'cal_burned', 'workout_type', 'fat_percentage',
+        'water_intake', 'workout_frequency', 'experience_level'
+    ]
+    for col in required_cols:
+        if col not in df.columns:
+            df[col] = np.nan
 
-    # Encoding
-    df = pd.get_dummies(df, columns=['gender'], drop_first=True)
+    # --- Bước 3: Tính toán đặc trưng phụ ---
+    df['bmi'] = df.apply(
+        lambda row: row['weight'] / (row['height'] ** 2)
+        if pd.notnull(row['weight']) and pd.notnull(row['height']) and row['height'] > 0
+        else np.nan,
+        axis=1
+    )
 
-    # Scaling
-    numeric_cols = df.select_dtypes(include=np.number).columns
-    scaler = MinMaxScaler()
-    df[numeric_cols] = scaler.fit_transform(df[numeric_cols])
+    # --- Bước 4: Mã hóa dữ liệu phân loại ---
+    cat_cols = ['gender', 'workout_type', 'experience_level']
+    for col in cat_cols:
+        if col in df.columns:
+            le = LabelEncoder()
+            df[col] = df[col].astype(str).fillna("Unknown")
+            df[col] = le.fit_transform(df[col])
 
-    logger.info(f"Preprocessed data shape: {df.shape}")
+    # --- Bước 5: Chuyển tất cả dữ liệu về kiểu số ---
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # --- Bước 6: Điền giá trị thiếu ---
+    df.fillna(0, inplace=True)
+
     return df
