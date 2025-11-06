@@ -1,37 +1,36 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from typing import Dict
 import logging
+from .input import calculate_bmr  # Import from same package
 
 logger = logging.getLogger(__name__)
 
 
 def calculate_bmi(weight: float, height: float) -> float:
-    """Calculate BMI: weight (kg) / (height (m)^2)"""
     return weight / ((height / 100) ** 2)
-
-
-def calculate_bmr(age: int, gender: str, weight: float, height: float) -> float:
-    """BMR formula: 10*W + 6.25*H - 5*A + s (s=5 male, -161 female)"""
-    s = 5 if gender == 'male' else -161
-    return 10 * weight + 6.25 * height - 5 * age + s
 
 
 def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Preprocess: Handle missing, calculate features, scale.
-    :param df: Raw DataFrame
-    :return: Processed DataFrame (scaled [0,1])
+    Preprocess data.
     """
-    # Handle missing (mean substitution)
+    # Handle missing
     df.fillna(df.mean(numeric_only=True), inplace=True)
 
-    # Calculate additional features
+    # Add placeholders if missing columns
+    if 'age' not in df.columns:
+        df['age'] = np.random.randint(18, 65, len(df))
+    # Tương tự cho other columns if needed
+
+    # Calculate features
     df['BMI'] = df.apply(lambda row: calculate_bmi(row['weight'], row['height']), axis=1)
     df['BMR'] = df.apply(lambda row: calculate_bmr(row['age'], row['gender'], row['weight'], row['height']), axis=1)
 
-    # Scaling (only numeric columns)
+    # Encoding
+    df = pd.get_dummies(df, columns=['gender'], drop_first=True)
+
+    # Scaling
     numeric_cols = df.select_dtypes(include=np.number).columns
     scaler = MinMaxScaler()
     df[numeric_cols] = scaler.fit_transform(df[numeric_cols])

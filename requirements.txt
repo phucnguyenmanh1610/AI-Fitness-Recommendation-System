@@ -5,3 +5,4 @@ tensorflow  # For advanced models if needed
 streamlit  # For dashboard prototype
 matplotlib  # For charts
 pytest  # For testing
+joblib

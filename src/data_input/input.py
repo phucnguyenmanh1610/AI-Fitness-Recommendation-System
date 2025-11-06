@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Dict, Optional
+import numpy as np
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -8,31 +8,51 @@ logger = logging.getLogger(__name__)
 def load_data(file_path: str) -> pd.DataFrame:
     """
     Load raw data from CSV file.
-    :param file_path: Path to CSV (e.g., 'data/raw/fitness.csv')
-    :return: Pandas DataFrame
     """
     try:
         df = pd.read_csv(file_path)
+        # Rename columns to match (adjust based on Kaggle CSV)
+        df.rename(columns={
+            'StepTotal': 'daily_steps',
+            'Calories': 'cal_burned',
+            # Add more if needed
+        }, inplace=True)
         logger.info(f"Loaded data from {file_path} with shape {df.shape}")
         return df
     except FileNotFoundError:
         logger.error(f"File not found: {file_path}")
         raise
 
-def get_user_input() -> Dict[str, float]:
+def calculate_bmr(age: int, gender: str, weight: float, height: float) -> float:
+    s = 5 if gender == 'male' else -161
+    return 10 * weight + 6.25 * height - 5 * age + s
+
+def get_activity_factor(daily_steps: int) -> float:
+    if daily_steps < 5000:
+        return 1.2
+    elif 5000 <= daily_steps <= 10000:
+        return 1.55
+    else:
+        return 1.725
+
+def get_synthetic_data(n_samples: int = 500) -> pd.DataFrame:
     """
-    Simulate user input from wearable or manual entry.
-    TODO: Integrate with API (e.g., Fitbit) later.
-    :return: Dict of features
+    Generate synthetic data.
     """
-    # Placeholder: Hardcoded for prototype
-    return {
-        'age': 30,
-        'gender': 'male',  # 'male' or 'female'
-        'height': 175.0,   # cm
-        'weight': 70.0,    # kg
-        'daily_steps': 8000,
-        'heart_rate': 75,
-        'sleep_time': 7.5, # hours
-        'calorie_intake': 2500.0
+    np.random.seed(42)
+    data = {
+        'age': np.random.randint(18, 65, n_samples),
+        'gender': np.random.choice(['male', 'female'], n_samples),
+        'height': np.random.uniform(150, 190, n_samples),
+        'weight': np.random.uniform(50, 110, n_samples),
+        'daily_steps': np.random.randint(1000, 20000, n_samples),
+        'heart_rate': np.random.randint(60, 100, n_samples),
+        'sleep_time': np.random.uniform(4, 10, n_samples),
+        'calorie_intake': np.random.uniform(1500, 3500, n_samples),
     }
+    df = pd.DataFrame(data)
+    df['BMR'] = df.apply(lambda row: calculate_bmr(row['age'], row['gender'], row['weight'], row['height']), axis=1)
+    df['activity_factor'] = df['daily_steps'].apply(get_activity_factor)
+    df['cal_burned'] = df['BMR'] * df['activity_factor'] + np.random.normal(0, 50, n_samples)
+    logger.info(f"Generated synthetic data with shape {df.shape}")
+    return df
