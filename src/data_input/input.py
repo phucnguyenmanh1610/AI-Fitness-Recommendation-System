@@ -1,58 +1,46 @@
 import pandas as pd
 import numpy as np
 import logging
+from src.data_input.normalize import normalize_csv_files
 
-logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
-
-def load_data(file_path: str) -> pd.DataFrame:
+def load_data(file_path=None):
     """
-    Load raw data from CSV file.
+    Load and normalize dataset.
+    If file_path is provided, try to load that file; otherwise normalize all CSVs.
     """
-    try:
+    if file_path:
+        import pandas as pd
         df = pd.read_csv(file_path)
-        # Rename columns to match (adjust based on Kaggle CSV)
-        df.rename(columns={
-            'StepTotal': 'daily_steps',
-            'Calories': 'cal_burned',
-            # Add more if needed
-        }, inplace=True)
         logger.info(f"Loaded data from {file_path} with shape {df.shape}")
         return df
-    except FileNotFoundError:
-        logger.error(f"File not found: {file_path}")
-        raise
 
-def calculate_bmr(age: int, gender: str, weight: float, height: float) -> float:
-    s = 5 if gender == 'male' else -161
-    return 10 * weight + 6.25 * height - 5 * age + s
+    df = normalize_csv_files()
+    if df is None:
+        raise ValueError("No valid data to train on.")
+    return df
 
-def get_activity_factor(daily_steps: int) -> float:
-    if daily_steps < 5000:
-        return 1.2
-    elif 5000 <= daily_steps <= 10000:
-        return 1.55
-    else:
-        return 1.725
 
-def get_synthetic_data(n_samples: int = 500) -> pd.DataFrame:
-    """
-    Generate synthetic data.
-    """
+def get_synthetic_data(n_samples: int = 100):
+    """Generate synthetic fitness data for testing or fallback."""
+    logging.warning("Generating synthetic data instead of loading from file.")
     np.random.seed(42)
-    data = {
-        'age': np.random.randint(18, 65, n_samples),
-        'gender': np.random.choice(['male', 'female'], n_samples),
-        'height': np.random.uniform(150, 190, n_samples),
-        'weight': np.random.uniform(50, 110, n_samples),
-        'daily_steps': np.random.randint(1000, 20000, n_samples),
-        'heart_rate': np.random.randint(60, 100, n_samples),
-        'sleep_time': np.random.uniform(4, 10, n_samples),
-        'calorie_intake': np.random.uniform(1500, 3500, n_samples),
-    }
-    df = pd.DataFrame(data)
-    df['BMR'] = df.apply(lambda row: calculate_bmr(row['age'], row['gender'], row['weight'], row['height']), axis=1)
-    df['activity_factor'] = df['daily_steps'].apply(get_activity_factor)
-    df['cal_burned'] = df['BMR'] * df['activity_factor'] + np.random.normal(0, 50, n_samples)
-    logger.info(f"Generated synthetic data with shape {df.shape}")
+    df = pd.DataFrame({
+        "Age": np.random.randint(18, 60, n_samples),
+        "Gender": np.random.choice(["Male", "Female"], n_samples),
+        "Weight (kg)": np.random.uniform(45, 100, n_samples),
+        "Height (m)": np.random.uniform(1.5, 2.0, n_samples),
+        "Max_BPM": np.random.randint(120, 200, n_samples),
+        "Avg_BPM": np.random.randint(90, 160, n_samples),
+        "Resting_BPM": np.random.randint(60, 90, n_samples),
+        "Session_Duration (hours)": np.random.uniform(0.5, 2.0, n_samples),
+        "Calories_Burned": np.random.uniform(200, 900, n_samples),
+        "Workout_Type": np.random.choice(["Cardio", "Strength", "Yoga"], n_samples),
+        "Fat_Percentage": np.random.uniform(10, 30, n_samples),
+        "Water_Intake (liters)": np.random.uniform(1.0, 3.0, n_samples),
+        "Workout_Frequency (days/week)": np.random.randint(1, 7, n_samples),
+        "Experience_Level": np.random.randint(1, 3, n_samples),
+        "BMI": np.random.uniform(18.0, 35.0, n_samples),
+    })
     return df
