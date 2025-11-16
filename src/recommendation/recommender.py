@@ -6,24 +6,21 @@ import joblib
 import logging
 from typing import Dict
 import numpy as np
+
 logger = logging.getLogger(__name__)
 
-
-def train_prediction_model(df: pd.DataFrame, target_col: str = 'cal_burned') -> LinearRegression:
+def train_prediction_model(df: pd.DataFrame, target_col: str = 'calories_burned') -> LinearRegression:
     x = df.drop(target_col, axis=1, errors='ignore')
     y = df[target_col] if target_col in df else pd.Series([0] * len(df))
-
     if len(df) <= 1:
         model = LinearRegression()
         model.fit(x, y)
         logger.info("Trained on small data")
         joblib.dump(model, 'models/prediction_model.pkl')
         return model
-
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
     model = LinearRegression()
     model.fit(x_train, y_train)
-
     y_pred = model.predict(x_test)
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
@@ -31,12 +28,12 @@ def train_prediction_model(df: pd.DataFrame, target_col: str = 'cal_burned') -> 
     joblib.dump(model, 'models/prediction_model.pkl')
     return model
 
-
 def predict_health(model: LinearRegression, features: Dict[str, float]) -> Dict[str, float]:
     df_input = pd.DataFrame([features])
     prediction = model.predict(df_input)[0]
-    return {'cal_burned': prediction}
-def load_items(path: str = 'data/items.csv') -> pd.DataFrame:
+    return {'calories_burned': prediction}
+
+def load_items(path: str = 'data/train/items.csv') -> pd.DataFrame:
     """Load available fitness or diet plans."""
     try:
         df = pd.read_csv(path)
@@ -53,13 +50,32 @@ def load_items(path: str = 'data/items.csv') -> pd.DataFrame:
         logger.warning("Items file not found, using synthetic data.")
     return df
 
+def compute_score(user_profile, difficulty, duration_min):
+    # user_profile = [difficulty_pref, duration_scaled_0_1]
+    pref_diff = user_profile[0]
+    pref_dur = user_profile[1]
+    # chuẩn hóa duration_min về 0-1
+    dur_scaled = duration_min / 60.0
+    diff_score = max(0, 1 - abs(difficulty - pref_diff) / 4)
+    dur_score = max(0, 1 - abs(dur_scaled - pref_dur))
+    score = 0.6 * diff_score + 0.4 * dur_score
+    return score
 
-def recommend_plans(user_profile: np.ndarray, items_df: pd.DataFrame, top_n: int = 3):
-    """Recommend plans based on similarity between user profile and item features."""
-    # Giả sử ta dùng similarity = 1 / (1 + |diff|)
-    items_df['score'] = -abs(items_df['difficulty'] - user_profile[0]) \
-                        - abs(items_df['duration_min'] / 60 - user_profile[1]) \
-                        + np.random.random(len(items_df)) * 0.1
-    top_items = items_df.sort_values('score', ascending=False).head(top_n)
-    logger.info(f"Top {top_n} recommended plans generated.")
-    return top_items[['plan_id', 'name', 'focus']]
+def recommend_plans(user_profile, items_df, top_n=3, include_score=False):
+    items_df['score'] = items_df.apply(
+        lambda row: compute_score(user_profile, row['difficulty'], row['duration_min']),
+        axis=1
+    )
+    # sort score + tie-breaker
+    sorted_items = items_df.sort_values(['score', 'plan_id'], ascending=[False, True])
+    if top_n > len(sorted_items):
+        repeats = int(np.ceil(top_n / len(sorted_items)))
+        repeated_items = pd.concat([sorted_items] * repeats, ignore_index=True)
+        repeated_items = repeated_items.sort_values(['score', 'plan_id'], ascending=[False, True])
+        result_items = repeated_items.head(top_n)
+    else:
+        result_items = sorted_items.head(top_n)
+    columns = ['plan_id', 'name', 'focus']
+    if include_score:
+        columns.append('score')
+    return result_items[columns]
