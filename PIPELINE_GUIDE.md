@@ -947,7 +947,7 @@ print("Model loaded successfully")
 
 ---
 
-## ✅ CHECKLIST TRIỂN KHAI
+## CHECKLIST TRIỂN KHAI
 
 - [ ] Install dependencies
 - [ ] Train models

@@ -1,6 +1,6 @@
 # HƯỚNG DẪN TÍCH HỢP DATASET TỪ KAGGLE VÀ TRAIN RECOMMENDATION MODELS
 
-## 📊 PHẦN 1: TÍCH HỢP DATASET TỪ KAGGLE
+## PHẦN 1: TÍCH HỢP DATASET TỪ KAGGLE
 
 ### 1.1 Quy Trình Tổng Quan
 
@@ -158,7 +158,7 @@ Kaggle Dataset
 
 ---
 
-## 🤖 PHẦN 2: TRAIN RECOMMENDATION MODELS
+## PHẦN 2: TRAIN RECOMMENDATION MODELS
 
 ### 2.1 Hiện Trạng Recommendation System
 
@@ -374,7 +374,7 @@ Kaggle Dataset
 
 ---
 
-## 📝 TÓM TẮT
+## TÓM TẮT
 
 ### Để tích hợp Kaggle Dataset:
 

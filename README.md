@@ -1,13 +1,13 @@
 # AI Fitness & Health Recommendation System
 
-## 📋 Overview
+## Overview
 
 Hệ thống AI dự đoán sức khỏe và khuyến nghị cá nhân hóa dựa trên Machine Learning. Hệ thống cung cấp:
 - **Dự đoán chỉ số sức khỏe**: BMI, BMR, calories burned
 - **Đề xuất bài tập**: Dựa trên mục tiêu và profile người dùng
 - **Đề xuất thực đơn**: Theo nhu cầu calo và macronutrients
 
-## 🏗️ System Architecture
+## System Architecture
 
 Hệ thống được thiết kế theo kiến trúc phân lớp:
 - **API Layer**: FastAPI với REST endpoints
@@ -15,7 +15,7 @@ Hệ thống được thiết kế theo kiến trúc phân lớp:
 - **Model Layer**: ML models (XGBoost, Random Forest, Neural Networks)
 - **Data Layer**: Data processing và storage
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Installation
 
@@ -84,7 +84,7 @@ Sau khi server chạy, truy cập:
 - **ReDoc**: http://localhost:8000/redoc
 - **Health Check**: http://localhost:8000/health
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### 1. Health Prediction
 **POST** `/api/v1/predict/health`
@@ -190,7 +190,7 @@ Dự đoán các chỉ số sức khỏe: BMI, BMR, calories burned
 }
 ```
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -203,7 +203,7 @@ pytest tests/test_prediction_model.py
 pytest --cov=src tests/
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 AI-Fitness-Recommendation-System/
@@ -247,9 +247,9 @@ Cấu hình trong `src/api/config.py` hoặc environment variables:
 - `DATABASE_URL`: Database connection string
 - `MAX_WORKERS`: Number of workers (default: 4)
 
-## 🎯 Features
+##  Features
 
-### ✅ Implemented
+### Implemented
 - [x] FastAPI REST API
 - [x] Health prediction (BMI, BMR, calories)
 - [x] XGBoost for calorie prediction
@@ -265,7 +265,7 @@ Cấu hình trong `src/api/config.py` hoặc environment variables:
 - [x] Docker support
 - [x] API documentation (Swagger/ReDoc)
 
-### 🚧 Future Enhancements
+### Future Enhancements
 - [ ] Database layer (SQLAlchemy)
 - [ ] User authentication
 - [ ] Prediction history storage
@@ -274,7 +274,7 @@ Cấu hình trong `src/api/config.py` hoặc environment variables:
 - [ ] CI/CD pipeline
 - [ ] Performance monitoring
 
-## 📊 Model Performance
+##  Model Performance
 
 ### Calorie Prediction (XGBoost)
 - **Target**: MAE < 50 kcal
@@ -284,7 +284,7 @@ Cấu hình trong `src/api/config.py` hoặc environment variables:
 - **Metrics**: MAE, RMSE, R²
 - **Performance**: Check training logs
 
-## 🐳 Docker Deployment
+##  Docker Deployment
 
 ```bash
 # Build
@@ -297,7 +297,7 @@ docker run -p 8000:8000 ai-fitness-api
 docker-compose up -d
 ```
 
-## 📝 Development
+##  Development
 
 ### Code Structure
 - **API Layer**: FastAPI routes và handlers
@@ -312,14 +312,3 @@ docker-compose up -d
 4. Update documentation
 5. Create pull request
 
-## 📄 License
-
-[Add your license here]
-
-## 👥 Contributors
-
-[Add contributors here]
-
-## 📞 Support
-
-[Add support information here]
