@@ -34,20 +34,30 @@
   - Support cho cả Male và Female
 
 ### 4. Recommender Systems ✅
+- ✅ **Neural Content-Based Model** (`src/recommendation/models/neural_content_based.py`)
+  - MLP Regressor (64-32 hidden layers)
+  - Train từ user-item interactions
+  - Predict ratings dựa trên user + item features
+
+- ✅ **Neural Collaborative Filtering** (`src/recommendation/models/neural_collaborative.py`)
+  - MLP Regressor (128-64-32 hidden layers)
+  - Train từ user-item interactions
+  - Predict ratings với neural network
+
 - ✅ **Content-Based Filtering** (`src/recommendation/content_based.py`)
-  - Cosine similarity
-  - User profile vector
-  - Feature matrix từ items
+  - Sử dụng trained ML model (nếu có)
+  - Fallback về cosine similarity
+  - Auto-load models
 
 - ✅ **Collaborative Filtering** (`src/recommendation/collaborative.py`)
-  - SVD (TruncatedSVD)
-  - KNN option
-  - Synthetic interactions nếu không có data
+  - Sử dụng trained ML model (nếu có)
+  - Fallback về SVD/KNN
+  - Auto-load models
 
 - ✅ **Hybrid Recommender** (`src/recommendation/hybrid_recommender.py`)
   - Scoring: `0.6 * content + 0.4 * collaborative`
+  - Sử dụng ML predictions từ trained models
   - Configurable weights
-  - Merge recommendations từ cả 2 methods
 
 - ✅ **Meal Recommender** (`src/recommendation/meal_recommender.py`)
   - Meal plan generation
@@ -60,11 +70,21 @@
   - ActivityData dataclass
   - BMI auto-calculation
 
-### 6. Training Script ✅
+### 6. Training Scripts ✅
 - ✅ **src/train_models.py**
   - Train cả calorie và BMI models
   - Load và preprocess data
   - Save models với metrics
+
+- ✅ **src/train_recommendation_models.py**
+  - Generate training data từ fitness data
+  - Train Neural Collaborative Filtering
+  - Train Neural Content-Based
+  - Save models với metrics
+
+- ✅ **train_all.py**
+  - Train tất cả models (prediction + recommendation)
+  - Single command để train toàn bộ hệ thống
 
 ### 7. Deployment ✅
 - ✅ **Dockerfile**: Multi-stage build, health check

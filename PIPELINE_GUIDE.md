@@ -549,25 +549,24 @@ Validated Request
   ├─► Initialize Hybrid Recommender
   │   │
   │   ├─► Content-Based Recommender
-  │   │   ├─► Build feature matrix from items
-  │   │   │   ├─► difficulty (normalized 0-1)
-  │   │   │   ├─► duration_min (normalized 0-1)
-  │   │   │   ├─► focus (one-hot encoded)
-  │   │   │   └─► calories_burned (normalized)
+  │   │   ├─► Try: Load Neural Content-Based Model
+  │   │   │   ├─► If model exists: Use MLP predictions
+  │   │   │   ├─► Prepare user + item features
+  │   │   │   └─► Predict rating (0-5 scale)
   │   │   │
-  │   │   ├─► Create user profile vector
-  │   │   │   ├─► difficulty_pref from experience_level
-  │   │   │   ├─► duration_pref from preferred_duration
-  │   │   │   ├─► focus_prefs from goal (loss/gain/maintain)
-  │   │   │   └─► calories_pref from goal
-  │   │   │
-  │   │   └─► Calculate cosine similarity
-  │   │       └─► content_score = cosine(user_vector, item_features)
+  │   │   └─► Fallback: Cosine Similarity
+  │   │       ├─► Build feature matrix from items
+  │   │       ├─► Create user profile vector
+  │   │       └─► Calculate cosine similarity
   │   │
   │   └─► Collaborative Recommender
-  │       ├─► Build user-item matrix (synthetic if no real data)
-  │       ├─► Train SVD model
-  │       └─► Calculate collaborative_score
+  │       ├─► Try: Load Neural Collaborative Filtering Model
+  │       │   ├─► If model exists: Use MLP predictions
+  │       │   └─► Predict rating from user-item features
+  │       │
+  │       └─► Fallback: SVD/KNN
+  │           ├─► Build user-item matrix
+  │           └─► Train SVD model
   │
   ├─► Hybrid Scoring
   │   └─► score = 0.6 × content_score + 0.4 × collaborative_score

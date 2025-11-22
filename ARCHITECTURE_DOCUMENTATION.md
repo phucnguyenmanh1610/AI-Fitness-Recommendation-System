@@ -304,78 +304,90 @@ Xử lý business logic, recommendation algorithms, và meal planning.
 
 #### 1. `src/recommendation/content_based.py` - Content-Based Filtering
 
-**Vai trò:** Đề xuất dựa trên similarity giữa user profile và item features.
+**Vai trò:** Đề xuất dựa trên ML model hoặc cosine similarity.
 
 **Chức năng:**
-- Build feature matrix từ items
-- Create user profile vector
-- Calculate cosine similarity
-- Rank items by similarity
+- Load trained Neural Content-Based model (nếu có)
+- Predict ratings bằng MLP model
+- Fallback về cosine similarity nếu model chưa train
 
 **Cách sử dụng:**
 ```python
 from src.recommendation.content_based import ContentBasedRecommender
 
-recommender = ContentBasedRecommender()
+recommender = ContentBasedRecommender(use_ml_model=True)
 recommender.load_items(items_df)
 
 recommendations = recommender.recommend(
     user_profile={
+        "age": 30,
+        "gender": "Male",
+        "goal": "loss",
         "experience_level": 2,
-        "preferred_duration": 45,
-        "goal": "loss"
+        "preferred_duration": 45
     },
     top_n=5
 )
 ```
 
-**Features:**
-- Difficulty (normalized)
-- Duration (normalized)
-- Focus type (one-hot encoded)
-- Calories burned (normalized)
+**ML Model (Neural Content-Based):**
+- Architecture: MLP Regressor (64-32 hidden layers)
+- Input: User features + Item features
+- Output: Predicted rating (0-5)
+- Training: Supervised learning từ user-item interactions
 
-**Algorithm:**
-- Cosine similarity giữa user vector và item feature matrix
-- Score = cosine(user_vector, item_features)
+**Fallback (Cosine Similarity):**
+- Build feature matrix từ items
+- Create user profile vector
+- Calculate cosine similarity
 
 **Dependencies:**
-- scikit-learn (cosine_similarity)
+- `src/recommendation/models/neural_content_based.py` - ML model
+- scikit-learn (cosine_similarity, MLPRegressor)
 - pandas, numpy
 
 ---
 
 #### 2. `src/recommendation/collaborative.py` - Collaborative Filtering
 
-**Vai trò:** Đề xuất dựa trên user-item interactions (collaborative approach).
+**Vai trò:** Đề xuất dựa trên ML model hoặc SVD/KNN.
 
 **Chức năng:**
-- Build user-item interaction matrix
-- Train SVD hoặc KNN model
-- Generate recommendations từ item popularity/similarity
+- Load trained Neural Collaborative Filtering model (nếu có)
+- Predict ratings bằng MLP model
+- Fallback về SVD/KNN nếu model chưa train
 
 **Cách sử dụng:**
 ```python
 from src.recommendation.collaborative import CollaborativeRecommender
 
-recommender = CollaborativeRecommender(method="svd")
+recommender = CollaborativeRecommender(method="svd", use_ml_model=True)
 recommender.load_items(items_df, user_interactions_df)
 
 recommendations = recommender.recommend(
-    user_profile={},
+    user_profile={
+        "age": 30,
+        "gender": "Male",
+        "goal": "loss"
+    },
     top_n=5
 )
 ```
 
-**Methods:**
-- **SVD**: TruncatedSVD để reduce dimensions
-- **KNN**: NearestNeighbors với cosine similarity
+**ML Model (Neural Collaborative Filtering):**
+- Architecture: MLP Regressor (128-64-32 hidden layers)
+- Input: User features + Item features
+- Output: Predicted rating (0-5)
+- Training: Supervised learning từ user-item interactions
 
-**Fallback:**
-- Nếu không có user interactions, tạo synthetic interactions dựa trên item features
+**Fallback (SVD/KNN):**
+- Build user-item interaction matrix
+- Train SVD hoặc KNN model
+- Generate recommendations từ item popularity
 
 **Dependencies:**
-- scikit-learn (TruncatedSVD, NearestNeighbors)
+- `src/recommendation/models/neural_collaborative.py` - ML model
+- scikit-learn (TruncatedSVD, NearestNeighbors, MLPRegressor)
 - pandas, numpy
 
 ---
@@ -866,7 +878,10 @@ src/
 │   ├── content_based.py
 │   ├── collaborative.py
 │   ├── hybrid_recommender.py
-│   └── meal_recommender.py
+│   ├── meal_recommender.py
+│   └── models/            # ML models for recommendation
+│       ├── neural_collaborative.py
+│       └── neural_content_based.py
 │
 ├── prediction/            # Model Layer
 │   ├── models/
