@@ -13,15 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 class CollaborativeRecommender:
-    """Collaborative filtering using ML model or SVD/KNN"""
+    """Collaborative filtering using SVD/KNN (rule-based)"""
     
-    def __init__(self, method: str = "svd", use_ml_model: bool = True):
+    def __init__(self, method: str = "svd", use_ml_model: bool = False):
         """
         Initialize collaborative recommender
         
         Args:
-            method: "svd" or "knn" (used if ML model not available)
-            use_ml_model: If True, use trained neural model. If False, use SVD/KNN.
+            method: "svd" or "knn" (default method)
+            use_ml_model: If True, use trained neural model. If False, use SVD/KNN (default).
         """
         self.method = method
         self.use_ml_model = use_ml_model

@@ -12,14 +12,14 @@ logger = logging.getLogger(__name__)
 
 
 class ContentBasedRecommender:
-    """Content-based filtering using ML model or cosine similarity"""
+    """Content-based filtering using cosine similarity (rule-based)"""
     
-    def __init__(self, use_ml_model: bool = True):
+    def __init__(self, use_ml_model: bool = False):
         """
         Initialize content-based recommender
         
         Args:
-            use_ml_model: If True, use trained neural model. If False, use cosine similarity.
+            use_ml_model: If True, use trained neural model. If False, use cosine similarity (default).
         """
         self.use_ml_model = use_ml_model
         self.items_df: pd.DataFrame = None

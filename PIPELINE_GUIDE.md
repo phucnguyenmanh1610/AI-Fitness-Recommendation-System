@@ -178,151 +178,33 @@ python src/train_models.py
 
 ---
 
-### Training Recommendation Models
+### Recommendation System (Rule-Based)
 
-#### Bước 1: Generate Training Data
+**Lưu ý:** Recommendation system sử dụng rule-based approach và **KHÔNG CẦN TRAINING**.
 
-**Input:** `data/raw/fitness.csv` + `data/train/items.csv`
+**Content-Based Filtering:**
+- Sử dụng cosine similarity
+- Không cần train model
+- Tính toán trực tiếp từ user profile và item features
 
-**Quá trình:**
-```
-fitness.csv + items.csv
-  │
-  ├─► Extract User Features
-  │   ├─► age, gender, height, weight, bmi
-  │   ├─► activity_level, experience_level
-  │   └─► goal (inferred from BMI)
-  │
-  ├─► Extract Item Features
-  │   ├─► difficulty, duration_min
-  │   ├─► calories_burned
-  │   └─► focus (one-hot encoded)
-  │
-  └─► Generate User-Item Interactions
-      ├─► Calculate compatibility scores
-      ├─► Add noise for realism
-      └─► Filter positive interactions (rating >= 3)
-```
+**Collaborative Filtering:**
+- Sử dụng SVD (TruncatedSVD) hoặc KNN
+- Train SVD model on-the-fly từ user-item matrix
+- Không cần pre-training
 
-**Output:** 
-- `user_item_data` - User-item interactions với ratings
-- `user_features` - User feature vectors
-- `item_features` - Item feature vectors
+**Hybrid Recommender:**
+- Combine content-based và collaborative scores
+- Weights: 0.6 * content + 0.4 * collaborative
+- Không cần training
 
-#### Bước 2: Train Neural Collaborative Filtering
+**Optional: ML Models cho Recommendation**
 
-**Input:** User-item interactions, user features, item features
-
-**Quá trình:**
-```
-Training Data
-  │
-  ├─► Prepare Features
-  │   └─► Concatenate user + item features
-  │
-  ├─► Scale Features (StandardScaler)
-  │
-  ├─► Train/Test Split (80/20)
-  │
-  ├─► Train MLP Regressor
-  │   ├─► Architecture: 128-64-32 hidden layers
-  │   ├─► Activation: ReLU
-  │   ├─► Optimizer: Adam
-  │   └─► Early stopping enabled
-  │
-  ├─► Evaluate
-  │   ├─► Calculate MAE
-  │   ├─► Calculate RMSE
-  │   └─► Calculate R²
-  │
-  └─► Save Model
-      ├─► models/neural_collaborative.pkl
-      └─► models/neural_collaborative_scaler.pkl
-```
-
-**Output:**
-- `neural_collaborative.pkl` - Trained MLP model
-- `neural_collaborative_scaler.pkl` - Feature scaler
-- Metrics: MAE, RMSE, R²
-
-#### Bước 3: Train Neural Content-Based
-
-**Input:** User-item interactions, user features, item features
-
-**Quá trình:**
-```
-Training Data
-  │
-  ├─► Prepare Features
-  │   └─► Concatenate user + item features
-  │
-  ├─► Scale Features
-  │
-  ├─► Train/Test Split (80/20)
-  │
-  ├─► Train MLP Regressor
-  │   ├─► Architecture: 64-32 hidden layers
-  │   ├─► Activation: ReLU
-  │   └─► Optimizer: Adam
-  │
-  ├─► Evaluate
-  │   └─► Calculate metrics
-  │
-  └─► Save Model
-      ├─► models/neural_content_based.pkl
-      └─► models/neural_content_based_scaler.pkl
-```
-
-**Output:**
-- `neural_content_based.pkl` - Trained MLP model
-- `neural_content_based_scaler.pkl` - Feature scaler
-- Metrics: MAE, RMSE, R²
-
-### Chạy Training Pipeline cho Recommendation Models
-
+Nếu muốn sử dụng ML models cho recommendation (optional), có thể train:
 ```bash
 python src/train_recommendation_models.py
 ```
 
-**Kết quả:**
-```
-Training Recommendation ML Models
-============================================================
-
-1. Loading fitness data...
-   Loaded 10002 records from data/raw/fitness.csv
-
-2. Loading workout items...
-   Loaded 10 workout items
-
-3. Generating training data...
-   Generated 1000 users
-   Generated 5000+ interactions
-   Generated 10 items
-
-4. Training Neural Collaborative Filtering...
-   ✓ Neural Collaborative Filtering trained successfully!
-     Test MAE: 0.5234
-     Test RMSE: 0.6789
-     Test R²: 0.8234
-
-5. Training Neural Content-Based...
-   ✓ Neural Content-Based trained successfully!
-     Test MAE: 0.4567
-     Test RMSE: 0.6123
-     Test R²: 0.8567
-
-============================================================
-Recommendation model training completed!
-```
-
-### Train Tất Cả Models
-
-```bash
-python train_all.py
-```
-
-Script này sẽ train cả prediction và recommendation models.
+Sau đó set `use_ml_model=True` khi khởi tạo recommenders. Mặc định hệ thống sử dụng rule-based approach.
 
 **Kết quả:**
 ```
@@ -355,7 +237,7 @@ Models saved to: models/
 
 ---
 
-## 🌐 PIPELINE API REQUEST
+## PIPELINE API REQUEST
 
 ### Khởi Động Server
 
@@ -549,24 +431,25 @@ Validated Request
   ├─► Initialize Hybrid Recommender
   │   │
   │   ├─► Content-Based Recommender
-  │   │   ├─► Try: Load Neural Content-Based Model
-  │   │   │   ├─► If model exists: Use MLP predictions
-  │   │   │   ├─► Prepare user + item features
-  │   │   │   └─► Predict rating (0-5 scale)
+  │   │   ├─► Build feature matrix from items
+  │   │   │   ├─► difficulty (normalized 0-1)
+  │   │   │   ├─► duration_min (normalized 0-1)
+  │   │   │   ├─► focus (one-hot encoded)
+  │   │   │   └─► calories_burned (normalized)
   │   │   │
-  │   │   └─► Fallback: Cosine Similarity
-  │   │       ├─► Build feature matrix from items
-  │   │       ├─► Create user profile vector
-  │   │       └─► Calculate cosine similarity
+  │   │   ├─► Create user profile vector
+  │   │   │   ├─► difficulty_pref from experience_level
+  │   │   │   ├─► duration_pref from preferred_duration
+  │   │   │   ├─► focus_prefs from goal (loss/gain/maintain)
+  │   │   │   └─► calories_pref from goal
+  │   │   │
+  │   │   └─► Calculate cosine similarity
+  │   │       └─► content_score = cosine(user_vector, item_features)
   │   │
   │   └─► Collaborative Recommender
-  │       ├─► Try: Load Neural Collaborative Filtering Model
-  │       │   ├─► If model exists: Use MLP predictions
-  │       │   └─► Predict rating from user-item features
-  │       │
-  │       └─► Fallback: SVD/KNN
-  │           ├─► Build user-item matrix
-  │           └─► Train SVD model
+  │       ├─► Build user-item matrix (synthetic if no real data)
+  │       ├─► Train SVD model
+  │       └─► Calculate collaborative_score
   │
   ├─► Hybrid Scoring
   │   └─► score = 0.6 × content_score + 0.4 × collaborative_score

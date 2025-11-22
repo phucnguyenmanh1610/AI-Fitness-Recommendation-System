@@ -12,7 +12,8 @@ Hệ thống AI dự đoán sức khỏe và khuyến nghị cá nhân hóa dự
 Hệ thống được thiết kế theo kiến trúc phân lớp:
 - **API Layer**: FastAPI với REST endpoints
 - **Service Layer**: Business logic và xử lý
-- **Model Layer**: ML models (XGBoost, Random Forest, Neural Networks)
+- **Model Layer**: ML models (XGBoost, Random Forest) cho prediction
+- **Service Layer**: Rule-based recommenders (cosine similarity, SVD) cho recommendation
 - **Data Layer**: Data processing và storage
 
 ## Quick Start
@@ -30,28 +31,22 @@ pip install -r requirements.txt
 
 ### 2. Train Models
 
-Trước khi chạy API, cần train các ML models:
+Trước khi chạy API, cần train các ML models cho prediction:
 
 ```bash
-# Train tất cả models (prediction + recommendation)
-python train_all.py
-
-# Hoặc train riêng:
-python src/train_models.py              # Prediction models
-python src/train_recommendation_models.py  # Recommendation models
+python src/train_models.py
 ```
 
-**Prediction Models:**
+Script này sẽ:
 - Load dữ liệu từ `data/raw/fitness.csv`
 - Train XGBoost model cho calorie prediction
 - Train Random Forest model cho BMI prediction
+- Lưu models vào thư mục `models/`
 
-**Recommendation Models:**
-- Generate training data từ fitness data
-- Train Neural Collaborative Filtering model
-- Train Neural Content-Based model
-
-Tất cả models được lưu vào thư mục `models/`
+**Lưu ý:** Recommendation system sử dụng rule-based approach (cosine similarity, SVD) và không cần training. Nếu muốn train ML models cho recommendation (optional), chạy:
+```bash
+python src/train_recommendation_models.py
+```
 
 ### 3. Run API Server
 
@@ -235,7 +230,7 @@ AI-Fitness-Recommendation-System/
 └── README.md
 ```
 
-## 🔧 Configuration
+## Configuration
 
 Cấu hình trong `src/api/config.py` hoặc environment variables:
 
@@ -258,10 +253,9 @@ Cấu hình trong `src/api/config.py` hoặc environment variables:
 - [x] Hybrid recommender system
 - [x] Content-based filtering
 - [x] Collaborative filtering (SVD)
-- [x] Workout recommendations (ML-based)
+- [x] Workout recommendations (rule-based: cosine similarity + SVD)
 - [x] Meal recommendations
-- [x] Neural Collaborative Filtering
-- [x] Neural Content-Based recommendation
+- [x] Hybrid recommender (content-based + collaborative)
 - [x] Docker support
 - [x] API documentation (Swagger/ReDoc)
 

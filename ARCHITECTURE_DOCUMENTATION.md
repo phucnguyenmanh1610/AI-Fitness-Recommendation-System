@@ -1,6 +1,6 @@
 # TÀI LIỆU KIẾN TRÚC HỆ THỐNG
 
-## 📋 MỤC LỤC
+##  MỤC LỤC
 1. [Tổng Quan Kiến Trúc](#tổng-quan-kiến-trúc)
 2. [Lớp API (API Layer)](#lớp-api-api-layer)
 3. [Lớp Dịch Vụ (Service Layer)](#lớp-dịch-vụ-service-layer)
@@ -11,7 +11,7 @@
 
 ---
 
-## 🏗️ TỔNG QUAN KIẾN TRÚC
+## TỔNG QUAN KIẾN TRÚC
 
 ### Kiến Trúc Phân Lớp (Layered Architecture)
 
@@ -45,7 +45,7 @@ API Layer → Service Layer → Model Layer → Data Layer
 
 ---
 
-## 🌐 LỚP API (API LAYER)
+##  LỚP API (API LAYER)
 
 ### Mục Đích
 Xử lý HTTP requests, validation, routing, và response formatting.
@@ -295,7 +295,7 @@ class Settings(BaseSettings):
 
 ---
 
-## 🔧 LỚP DỊCH VỤ (SERVICE LAYER)
+## LỚP DỊCH VỤ (SERVICE LAYER)
 
 ### Mục Đích
 Xử lý business logic, recommendation algorithms, và meal planning.
@@ -304,90 +304,88 @@ Xử lý business logic, recommendation algorithms, và meal planning.
 
 #### 1. `src/recommendation/content_based.py` - Content-Based Filtering
 
-**Vai trò:** Đề xuất dựa trên ML model hoặc cosine similarity.
+**Vai trò:** Đề xuất dựa trên cosine similarity (rule-based).
 
 **Chức năng:**
-- Load trained Neural Content-Based model (nếu có)
-- Predict ratings bằng MLP model
-- Fallback về cosine similarity nếu model chưa train
+- Build feature matrix từ items
+- Create user profile vector
+- Calculate cosine similarity
+- Rank items by similarity
 
 **Cách sử dụng:**
 ```python
 from src.recommendation.content_based import ContentBasedRecommender
 
-recommender = ContentBasedRecommender(use_ml_model=True)
+recommender = ContentBasedRecommender()
 recommender.load_items(items_df)
 
 recommendations = recommender.recommend(
     user_profile={
-        "age": 30,
-        "gender": "Male",
-        "goal": "loss",
         "experience_level": 2,
-        "preferred_duration": 45
-    },
-    top_n=5
-)
-```
-
-**ML Model (Neural Content-Based):**
-- Architecture: MLP Regressor (64-32 hidden layers)
-- Input: User features + Item features
-- Output: Predicted rating (0-5)
-- Training: Supervised learning từ user-item interactions
-
-**Fallback (Cosine Similarity):**
-- Build feature matrix từ items
-- Create user profile vector
-- Calculate cosine similarity
-
-**Dependencies:**
-- `src/recommendation/models/neural_content_based.py` - ML model
-- scikit-learn (cosine_similarity, MLPRegressor)
-- pandas, numpy
-
----
-
-#### 2. `src/recommendation/collaborative.py` - Collaborative Filtering
-
-**Vai trò:** Đề xuất dựa trên ML model hoặc SVD/KNN.
-
-**Chức năng:**
-- Load trained Neural Collaborative Filtering model (nếu có)
-- Predict ratings bằng MLP model
-- Fallback về SVD/KNN nếu model chưa train
-
-**Cách sử dụng:**
-```python
-from src.recommendation.collaborative import CollaborativeRecommender
-
-recommender = CollaborativeRecommender(method="svd", use_ml_model=True)
-recommender.load_items(items_df, user_interactions_df)
-
-recommendations = recommender.recommend(
-    user_profile={
-        "age": 30,
-        "gender": "Male",
+        "preferred_duration": 45,
         "goal": "loss"
     },
     top_n=5
 )
 ```
 
-**ML Model (Neural Collaborative Filtering):**
-- Architecture: MLP Regressor (128-64-32 hidden layers)
-- Input: User features + Item features
-- Output: Predicted rating (0-5)
-- Training: Supervised learning từ user-item interactions
+**Algorithm:**
+- Cosine similarity giữa user vector và item feature matrix
+- Score = cosine(user_vector, item_features)
+- Không cần training, tính toán trực tiếp
 
-**Fallback (SVD/KNN):**
-- Build user-item interaction matrix
-- Train SVD hoặc KNN model
-- Generate recommendations từ item popularity
+**Features:**
+- Difficulty (normalized)
+- Duration (normalized)
+- Focus type (one-hot encoded)
+- Calories burned (normalized)
+
+**Optional ML Model:**
+- Có thể sử dụng Neural Content-Based model nếu train và set `use_ml_model=True`
+- Mặc định sử dụng cosine similarity
 
 **Dependencies:**
-- `src/recommendation/models/neural_collaborative.py` - ML model
-- scikit-learn (TruncatedSVD, NearestNeighbors, MLPRegressor)
+- scikit-learn (cosine_similarity)
+- pandas, numpy
+
+---
+
+#### 2. `src/recommendation/collaborative.py` - Collaborative Filtering
+
+**Vai trò:** Đề xuất dựa trên SVD/KNN (rule-based).
+
+**Chức năng:**
+- Build user-item interaction matrix
+- Train SVD hoặc KNN model on-the-fly
+- Generate recommendations từ item popularity/similarity
+
+**Cách sử dụng:**
+```python
+from src.recommendation.collaborative import CollaborativeRecommender
+
+recommender = CollaborativeRecommender(method="svd")
+recommender.load_items(items_df, user_interactions_df)
+
+recommendations = recommender.recommend(
+    user_profile={},
+    top_n=5
+)
+```
+
+**Methods:**
+- **SVD**: TruncatedSVD để reduce dimensions
+- **KNN**: NearestNeighbors với cosine similarity
+
+**Fallback:**
+- Nếu không có user interactions, tạo synthetic interactions dựa trên item features
+- Train SVD/KNN model on-the-fly (không cần pre-training)
+
+**Optional ML Model:**
+- Có thể sử dụng Neural Collaborative Filtering model nếu train và set `use_ml_model=True`
+- Mặc định sử dụng SVD/KNN
+
+**Dependencies:**
+- scikit-learn (TruncatedSVD, NearestNeighbors)
 - pandas, numpy
 
 ---
@@ -473,7 +471,7 @@ meal_plan = recommender.recommend_meal_plan(
 
 ---
 
-## 🤖 LỚP MÔ HÌNH (MODEL LAYER)
+## LỚP MÔ HÌNH (MODEL LAYER)
 
 ### Mục Đích
 ML models cho prediction và calculation functions.
@@ -608,7 +606,7 @@ tdee = calculate_tdee(
 
 ---
 
-## 📊 LỚP DỮ LIỆU (DATA LAYER)
+## LỚP DỮ LIỆU (DATA LAYER)
 
 ### Mục Đích
 Xử lý và preprocessing dữ liệu.
@@ -717,7 +715,7 @@ df = get_processed_data("data/raw/fitness.csv")
 
 ---
 
-## 📝 MODELS & SCHEMAS
+## MODELS & SCHEMAS
 
 ### Mục Đích
 Data models và Pydantic schemas cho validation.
@@ -797,7 +795,7 @@ activity = ActivityData(
 
 ---
 
-## ⚙️ CONFIGURATION
+## CONFIGURATION
 
 ### `src/api/config.py` - Application Configuration
 
@@ -831,7 +829,7 @@ print(settings.CALORIE_MODEL_PATH)
 
 ---
 
-## 🔗 DEPENDENCY GRAPH
+## DEPENDENCY GRAPH
 
 ```
 API Layer
@@ -862,7 +860,7 @@ Data Layer
 
 ---
 
-## 📦 PACKAGE STRUCTURE
+## PACKAGE STRUCTURE
 
 ```
 src/
@@ -902,7 +900,7 @@ src/
 
 ---
 
-## 🎯 TÓM TẮT VAI TRÒ CÁC LỚP
+## TÓM TẮT VAI TRÒ CÁC LỚP
 
 | Lớp | Vai Trò | Components | Dependencies |
 |-----|---------|------------|--------------|
