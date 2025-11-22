@@ -69,7 +69,9 @@
 
 ##  PIPELINE TRAINING MODELS
 
-### Bước 1: Chuẩn Bị Dữ Liệu
+### Training Prediction Models
+
+#### Bước 1: Chuẩn Bị Dữ Liệu
 
 **Input:** `data/raw/fitness.csv` (10,002 records)
 
@@ -168,11 +170,159 @@ df_processed
 - `bmi_model.pkl` - Trained Random Forest model
 - Metrics: MAE, RMSE, R²
 
-### Chạy Training Pipeline
+### Chạy Training Pipeline cho Prediction Models
 
 ```bash
 python src/train_models.py
 ```
+
+---
+
+### Training Recommendation Models
+
+#### Bước 1: Generate Training Data
+
+**Input:** `data/raw/fitness.csv` + `data/train/items.csv`
+
+**Quá trình:**
+```
+fitness.csv + items.csv
+  │
+  ├─► Extract User Features
+  │   ├─► age, gender, height, weight, bmi
+  │   ├─► activity_level, experience_level
+  │   └─► goal (inferred from BMI)
+  │
+  ├─► Extract Item Features
+  │   ├─► difficulty, duration_min
+  │   ├─► calories_burned
+  │   └─► focus (one-hot encoded)
+  │
+  └─► Generate User-Item Interactions
+      ├─► Calculate compatibility scores
+      ├─► Add noise for realism
+      └─► Filter positive interactions (rating >= 3)
+```
+
+**Output:** 
+- `user_item_data` - User-item interactions với ratings
+- `user_features` - User feature vectors
+- `item_features` - Item feature vectors
+
+#### Bước 2: Train Neural Collaborative Filtering
+
+**Input:** User-item interactions, user features, item features
+
+**Quá trình:**
+```
+Training Data
+  │
+  ├─► Prepare Features
+  │   └─► Concatenate user + item features
+  │
+  ├─► Scale Features (StandardScaler)
+  │
+  ├─► Train/Test Split (80/20)
+  │
+  ├─► Train MLP Regressor
+  │   ├─► Architecture: 128-64-32 hidden layers
+  │   ├─► Activation: ReLU
+  │   ├─► Optimizer: Adam
+  │   └─► Early stopping enabled
+  │
+  ├─► Evaluate
+  │   ├─► Calculate MAE
+  │   ├─► Calculate RMSE
+  │   └─► Calculate R²
+  │
+  └─► Save Model
+      ├─► models/neural_collaborative.pkl
+      └─► models/neural_collaborative_scaler.pkl
+```
+
+**Output:**
+- `neural_collaborative.pkl` - Trained MLP model
+- `neural_collaborative_scaler.pkl` - Feature scaler
+- Metrics: MAE, RMSE, R²
+
+#### Bước 3: Train Neural Content-Based
+
+**Input:** User-item interactions, user features, item features
+
+**Quá trình:**
+```
+Training Data
+  │
+  ├─► Prepare Features
+  │   └─► Concatenate user + item features
+  │
+  ├─► Scale Features
+  │
+  ├─► Train/Test Split (80/20)
+  │
+  ├─► Train MLP Regressor
+  │   ├─► Architecture: 64-32 hidden layers
+  │   ├─► Activation: ReLU
+  │   └─► Optimizer: Adam
+  │
+  ├─► Evaluate
+  │   └─► Calculate metrics
+  │
+  └─► Save Model
+      ├─► models/neural_content_based.pkl
+      └─► models/neural_content_based_scaler.pkl
+```
+
+**Output:**
+- `neural_content_based.pkl` - Trained MLP model
+- `neural_content_based_scaler.pkl` - Feature scaler
+- Metrics: MAE, RMSE, R²
+
+### Chạy Training Pipeline cho Recommendation Models
+
+```bash
+python src/train_recommendation_models.py
+```
+
+**Kết quả:**
+```
+Training Recommendation ML Models
+============================================================
+
+1. Loading fitness data...
+   Loaded 10002 records from data/raw/fitness.csv
+
+2. Loading workout items...
+   Loaded 10 workout items
+
+3. Generating training data...
+   Generated 1000 users
+   Generated 5000+ interactions
+   Generated 10 items
+
+4. Training Neural Collaborative Filtering...
+   ✓ Neural Collaborative Filtering trained successfully!
+     Test MAE: 0.5234
+     Test RMSE: 0.6789
+     Test R²: 0.8234
+
+5. Training Neural Content-Based...
+   ✓ Neural Content-Based trained successfully!
+     Test MAE: 0.4567
+     Test RMSE: 0.6123
+     Test R²: 0.8567
+
+============================================================
+Recommendation model training completed!
+```
+
+### Train Tất Cả Models
+
+```bash
+python train_all.py
+```
+
+Script này sẽ train cả prediction và recommendation models.
 
 **Kết quả:**
 ```

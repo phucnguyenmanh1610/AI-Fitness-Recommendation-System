@@ -258,8 +258,10 @@ Cấu hình trong `src/api/config.py` hoặc environment variables:
 - [x] Hybrid recommender system
 - [x] Content-based filtering
 - [x] Collaborative filtering (SVD)
-- [x] Workout recommendations
+- [x] Workout recommendations (ML-based)
 - [x] Meal recommendations
+- [x] Neural Collaborative Filtering
+- [x] Neural Content-Based recommendation
 - [x] Docker support
 - [x] API documentation (Swagger/ReDoc)
 
