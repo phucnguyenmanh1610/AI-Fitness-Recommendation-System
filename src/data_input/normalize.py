@@ -1,4 +1,3 @@
-# src/data_input/normalize.py
 import pandas as pd
 import logging
 from pathlib import Path
@@ -43,22 +42,36 @@ def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def standardize_values(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Standardize categorical and numeric values
-    """
     df = df.copy()
 
     # --- Gender ---
     if "gender" in df.columns:
-        df["gender"] = df["gender"].astype(str).str.strip().replace({"M": "Male", "F": "Female"})
+        df["gender"] = (
+            df["gender"]
+            .astype(str)
+            .str.strip()
+            .replace({"M": "Male", "F": "Female"})
+        )
         df["gender_num"] = df["gender"].map({"Male": 0, "Female": 1})
 
     # --- Workout type ---
     if "workout_type" in df.columns:
-        df["workout_type"] = df["workout_type"].astype(str).str.strip().str.capitalize()
-        df["workout_type_num"] = df["workout_type"].map({"None": 0, "Cardio": 1, "Strength": 2, "Yoga": 3})
+        df["workout_type"] = (
+            df["workout_type"]
+            .astype(str)
+            .str.strip()
+            .str.capitalize()
+        )
+        df["workout_type_num"] = df["workout_type"].map(
+            {"None": 0, "Cardio": 1, "Strength": 2, "Yoga": 3}
+        )
 
-    # --- Numeric columns ---
+    # --- Auto-create missing column water_intake ---
+    if "water_intake" not in df.columns:
+        df["water_intake"] = df["weight"] * 0.03  # 30ml per kg
+        logging.info("💧 Created water_intake column from weight")
+
+    # --- Numeric sanitation ---
     numeric_cols = [
         "age","height","weight","bmi","max_bpm","avg_bpm","resting_bpm",
         "session_duration","calories_burned","fat_percentage","water_intake",
@@ -67,6 +80,7 @@ def standardize_values(df: pd.DataFrame) -> pd.DataFrame:
     for col in numeric_cols:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
-            df[col].fillna(df[col].median(), inplace=True)
+            df[col] = df[col].fillna(df[col].median())
 
     return df
+
