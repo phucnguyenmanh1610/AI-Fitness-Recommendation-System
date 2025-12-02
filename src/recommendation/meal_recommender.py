@@ -142,8 +142,18 @@ class MealRecommender:
             for _ in range(count):
                 if len(type_meals) > 0:
                     meal = type_meals.iloc[0].to_dict()
+                    # Handle meal_id - can be string (M1, M131) or int
+                    meal_id = meal.get('meal_id', '')
+                    if isinstance(meal_id, str):
+                        meal_id_value = meal_id
+                    else:
+                        try:
+                            meal_id_value = int(meal_id)
+                        except (ValueError, TypeError):
+                            meal_id_value = str(meal_id)
+                    
                     selected_meals.append(MealItem(
-                        meal_id=int(meal['meal_id']),
+                        meal_id=meal_id_value,
                         name=str(meal['name']),
                         calories=float(meal['calories']),
                         protein=float(meal['protein']),
@@ -166,8 +176,18 @@ class MealRecommender:
             snacks = self.meals_df[self.meals_df['meal_type'] == 'snack']
             if len(snacks) > 0:
                 snack = snacks.sample(1).iloc[0].to_dict()
+                # Handle meal_id - can be string (M1, M131) or int
+                snack_id = snack.get('meal_id', '')
+                if isinstance(snack_id, str):
+                    snack_id_value = snack_id
+                else:
+                    try:
+                        snack_id_value = int(snack_id)
+                    except (ValueError, TypeError):
+                        snack_id_value = str(snack_id)
+                
                 selected_meals.append(MealItem(
-                    meal_id=int(snack['meal_id']),
+                    meal_id=snack_id_value,
                     name=str(snack['name']),
                     calories=float(snack['calories']),
                     protein=float(snack['protein']),

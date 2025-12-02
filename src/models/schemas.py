@@ -151,7 +151,7 @@ class WorkoutRecommendationResponse(BaseModel):
 
 class MealItem(BaseModel):
     """Meal item schema"""
-    meal_id: int
+    meal_id: Union[int, str]  # Can be int or string like "M1", "M131"
     name: str
     calories: float
     protein: float
