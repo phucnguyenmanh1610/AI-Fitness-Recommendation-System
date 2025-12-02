@@ -243,7 +243,7 @@ Models saved to: models/
 
 ```bash
 # Option 1: Direct
-python run_api.py
+python3 run_api.py
 
 # Option 2: Uvicorn
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload

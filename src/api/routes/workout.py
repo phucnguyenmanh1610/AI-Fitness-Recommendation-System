@@ -67,8 +67,20 @@ async def recommend_workout(request: WorkoutRecommendationRequest):
         # Convert to response format
         workout_items = []
         for idx, rec in recommendations.iterrows():
+            # Handle plan_id - can be string (W1, W369) or int
+            plan_id = rec.get('plan_id', idx)
+            if isinstance(plan_id, str):
+                # Keep as string if it's already a string
+                plan_id_value = plan_id
+            else:
+                # Convert to int if it's numeric
+                try:
+                    plan_id_value = int(plan_id)
+                except (ValueError, TypeError):
+                    plan_id_value = str(plan_id)
+            
             workout_items.append(WorkoutItem(
-                plan_id=int(rec.get('plan_id', idx)),
+                plan_id=plan_id_value,
                 name=str(rec.get('name', 'Unknown')),
                 difficulty=int(rec.get('difficulty', 2)),
                 duration_min=int(rec.get('duration_min', 30)),

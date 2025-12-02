@@ -2,7 +2,7 @@
 Pydantic schemas for API requests and responses
 """
 from pydantic import BaseModel, Field, validator
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Union
 from enum import Enum
 
 
@@ -131,7 +131,7 @@ class HealthPredictionResponse(BaseModel):
 
 class WorkoutItem(BaseModel):
     """Workout item schema"""
-    plan_id: int
+    plan_id: Union[int, str]  # Can be int or string like "W1", "W369"
     name: str
     difficulty: int
     duration_min: int
