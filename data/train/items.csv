@@ -1,0 +1,12 @@
+plan_id,name,difficulty,duration_min,focus,calories_burned,description
+1,Yoga,2,45,flexibility,150,Relaxing yoga session for flexibility and mindfulness
+2,Cardio,3,30,cardio,300,High-intensity cardio workout
+3,Strength Training,4,60,strength,250,Full body strength training with weights
+4,HIIT,5,20,hiit,400,High-intensity interval training
+5,Pilates,2,50,core,180,Core strengthening Pilates session
+6,Running,3,40,cardio,350,Outdoor running workout
+7,Cycling,3,45,cardio,280,Indoor cycling session
+8,Swimming,4,30,full-body,320,Swimming laps for full body workout
+9,Weight Lifting,4,60,strength,200,Heavy weight lifting session
+10,Dance Fitness,3,45,cardio,270,Fun dance-based cardio workout
+
